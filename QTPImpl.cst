@@ -1,0 +1,159 @@
+<%-- 
+Name: QTPimpl
+Author: Derek Liang
+Description: This is a template class generator for quickly implement a skeloton class using Pimpl idiom in QT
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="Text" Src="" Inherits="" Debug="False" Description="Template description here." %>
+<%@ Property Name="ClassName" Type="System.String" Default="MyClass" Optional="False" Category="Class info" Description="Specifiy the QT class name" %>
+<%@ Property Name="DataClassNameSuffix" Type="System.String" Default="Data" Optional="False" Category="Class info" Description="Specify the QT Data class name suffix" %>
+<%@ Property Name="AddComment" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to comment the generated code" %>
+<%@ Property Name="GenComparor" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to generate comparison operator" %>
+<%@ Property Name="GenDebugOutput" Type="System.Boolean" Default="False" Optional="True" Category="Options" Description="Specify if you would like to generate debug output" %>
+<%@ Property Name="OutputPath" Type="System.String" Default="" Optional="True" Category="Path" Description="Specifiy the QT project path" %>
+<%@ Assembly Name="System.Data" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Import Namespace="System.IO" %>
+#include <QSharedData>
+#include <QString>
+#include "<%= ClassName.ToLower() %>.h"
+
+class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
+{
+	public:  
+		<%= ClassName %><%= DataClassNameSuffix %>()
+		<% if (AddComment) { %>
+			// initialize the default value for member variable
+			//: id(-1)
+			//  ,name("")
+		<% } %>
+		{ <% if (GenDebugOutput) {%> qDebug() << this << ":ctor: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
+		
+		~<%= ClassName %><%= DataClassNameSuffix %>() { <% if (GenDebugOutput) {%> qDebug() << this << ":dtor: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
+
+	 	<%= ClassName %><%= DataClassNameSuffix %>(const  <%= ClassName %><%= DataClassNameSuffix %> &other)
+        	: QSharedData(other)
+			<% if (AddComment) { %>
+			// TODO: for each member add to the initialization list, as shown below in the comment
+			// ,id(other.id) 
+			// ,name(other.name)
+			<% } %>
+			{ <% if (GenDebugOutput) {%> qDebug() << this << ":copy: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
+		
+		<% if (AddComment) { %>
+    	// int id;
+    	// QString name;
+		<% } %>
+ };
+
+<%= ClassName %>::<%= ClassName %>() 
+	: d (new <%= ClassName %><%= DataClassNameSuffix %>) 
+{ <% if (GenDebugOutput) {%> qDebug() << this << ":ctor: <%= ClassName %>" ; <% } %>}
+
+<%= ClassName %>::~<%= ClassName %>() 
+{ <% if (GenDebugOutput) {%> qDebug() << this << ":dtor: <%= ClassName %>" ; <% } %>}
+		
+<%= ClassName %>::<%= ClassName %>(const <%= ClassName %> &other)
+   : d (other.d)
+{ <% if (GenDebugOutput) {%> qDebug() << this << ":copy: <%= ClassName %>" ; <% } %>}
+
+<%= ClassName %>& <%= ClassName %>::operator=(const <%= ClassName %>& other)
+{
+	<% if (GenDebugOutput) {%>
+		qDebug() << this << ":assg: <%= ClassName %>" ; 
+	<% } %>
+	d = other.d;
+	return *this;
+}
+
+<% if (GenComparor) { %>
+bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
+	<% if (AddComment) { %>
+   	//return this->id()==other.id();
+	<% } %>
+	<% if (GenDebugOutput) {%> qDebug() << this << ":comp: <%= ClassName %>" ; <% } %>
+	return 0;	//TODO: your implementation
+}
+		
+<% } %>
+		
+@@@@-@@@@@#ifndef <%= ClassName.ToUpper() %>_H
+#define <%= ClassName.ToUpper() %>_H
+
+#include <QSharedDataPointer>
+<% if (GenComparor) { %>#include <QSharedPointer><% } %>
+<% if (GenDebugOutput) { %>#include <QDebug><% } %>
+
+<% if (AddComment) { %>
+// Forward declaration
+<% } %>
+class <%= ClassName %><%= DataClassNameSuffix %>;
+
+class <%= ClassName %>
+{
+	public:
+    	<%= ClassName %>() ;
+    	
+		~<%= ClassName %>();
+				
+		<% if (AddComment) { %>
+		//Other constructor
+		//<%= ClassName %>(int id, QString name) {
+        //	 d = new <%= ClassName %><%= DataClassNameSuffix %>;
+        // 	setId(id);
+        // 	setName(name);
+     	//}
+		
+		<% } %>		
+		<% if (AddComment) { %>
+		//Copy ctor
+		<% } %>
+     	<%= ClassName %>(const <%= ClassName %> &other);
+		
+		<% if (AddComment) { %>
+		//assignment
+		<% } %>
+		<%= ClassName %>& operator=(const <%= ClassName %>& other);		
+		
+		<% if (AddComment) { %>
+		// int id() const { return d->id; }
+		// QString name() const { return d->name; }
+		
+		<% } %>
+		<% if (GenComparor) { %>
+		bool operator==(const <%= ClassName %>& other) const;
+		
+	    <% if (AddComment) { %>
+		//define the compare operator for iterator
+		<% } %>
+    	friend const bool operator==(QSharedPointer<<%= ClassName %>> const & a, QSharedPointer<<%= ClassName %>> const & b)
+		{
+			<% if (GenDebugOutput) {%> qDebug() << ":icomp: <%= ClassName %>" ; <% } %>
+			return *a.data() == *b.data();
+		}
+		
+		<% } %>
+   	private:		
+  		QSharedDataPointer<<%= ClassName %><%= DataClassNameSuffix %>> d;
+};
+#endif // <%= ClassName.ToUpper() %>_H
+
+<script runat="template">
+public override void Render(TextWriter writer)
+{
+	StringWriter sw = new StringWriter();
+	
+    this.Response.AddTextWriter(sw); 
+    base.Render(writer);
+	
+	if (OutputPath.Length>0) {
+		using(
+			StreamWriter cppFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + ".cpp" , false),
+				hFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + ".h" , false))
+		{	
+			string[] parts = sw.ToString().Split(new string[] {"@@@@-@@@@@"}, StringSplitOptions.None);
+			cppFile.Write(parts[0]);
+			hFile.Write(parts[1]);
+		}
+	}
+}
+</script>
