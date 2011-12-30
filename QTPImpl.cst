@@ -28,10 +28,13 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 {
 	public:  
 		<%= ClassName %><%= DataClassNameSuffix %>()
+		<% if (FieldName != null && FieldName.Length>0) {%>
+			:<%= FieldName %>(<%= FieldDefaultValue %>)
+		<% } %>
 		<% if (AddComment) { %>
-			// initialize the default value for member variable
-			//: id(-1)
-			//  ,name("")
+		// TODO: for each member add to the initialization list, as shown below in the comment
+		// : id(0) 
+		// ,name("")
 		<% } %>
 		{ <% if (GenDebugOutput) {%> qDebug() << this << ":ctor: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
 		
@@ -40,7 +43,7 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 	 	<%= ClassName %><%= DataClassNameSuffix %>(const  <%= ClassName %><%= DataClassNameSuffix %> &other)
         	: QSharedData(other)
 			<% if (FieldName != null && FieldName.Length>0) {%>
-			,<%= FieldName %>(<%= FieldDefaultValue %>)
+			,<%= FieldName %>(other.<%= FieldName %>)
 			<% } %>
 			<% if (AddComment) { %>
 			// TODO: for each member add to the initialization list, as shown below in the comment
