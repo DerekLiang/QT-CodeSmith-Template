@@ -10,11 +10,18 @@ Description: This is a template class generator for quickly implement a skeloton
 <%@ Property Name="GenComparor" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to generate comparison operator" %>
 <%@ Property Name="GenDebugOutput" Type="System.Boolean" Default="False" Optional="True" Category="Options" Description="Specify if you would like to generate debug output" %>
 <%@ Property Name="OutputPath" Type="System.String" Default="" Optional="True" Category="Path" Description="Specifiy the QT project path" %>
+<%@ Property Name="FileNameSuffix" Type="System.String" Default="" Optional="True" Category="Path" Description="Specifiy the generated file suffix. You might want to generate the files in different file names and merge them manually." %>
+<%@ Property Name="FieldName" Type="System.String" Default="" Optional="True" Category="Field" Description="Specifiy the generated field name" %>
+<%@ Property Name="FieldType" Type="System.String" Default="QString" Optional="True" Category="Field" Description="Specifiy the generated field type" %>
+<%@ Property Name="FieldDefaultValue" Type="System.String" Default="default" Optional="True" Category="Field" Description="Specifiy the generated field default value" %>
 <%@ Assembly Name="System.Data" %>
 <%@ Import Namespace="System.Data" %>
 <%@ Import Namespace="System.IO" %>
 #include <QSharedData>
+<% if (GenDebugOutput) { %>
 #include <QString>
+#include <QDebug>
+<% } %>
 #include "<%= ClassName.ToLower() %>.h"
 
 class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
@@ -32,16 +39,22 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 
 	 	<%= ClassName %><%= DataClassNameSuffix %>(const  <%= ClassName %><%= DataClassNameSuffix %> &other)
         	: QSharedData(other)
+			<% if (FieldName != null && FieldName.Length>0) {%>
+			,<%= FieldName %>(<%= FieldDefaultValue %>)
+			<% } %>
 			<% if (AddComment) { %>
 			// TODO: for each member add to the initialization list, as shown below in the comment
 			// ,id(other.id) 
 			// ,name(other.name)
 			<% } %>
-			{ <% if (GenDebugOutput) {%> qDebug() << this << ":copy: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
+		{ <% if (GenDebugOutput) {%> qDebug() << this << ":copy: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
 		
 		<% if (AddComment) { %>
     	// int id;
     	// QString name;
+		<% } %>
+		<% if (FieldName != null && FieldName.Length>0) { %>
+		<%= FieldType %> <%= FieldName %>;
 		<% } %>
  };
 
@@ -59,7 +72,7 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 <%= ClassName %>& <%= ClassName %>::operator=(const <%= ClassName %>& other)
 {
 	<% if (GenDebugOutput) {%>
-		qDebug() << this << ":assg: <%= ClassName %>" ; 
+	qDebug() << this << ":assg: <%= ClassName %>" ; 
 	<% } %>
 	d = other.d;
 	return *this;
@@ -70,18 +83,18 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 	<% if (AddComment) { %>
    	//return this->id()==other.id();
 	<% } %>
-	<% if (GenDebugOutput) {%> qDebug() << this << ":comp: <%= ClassName %>" ; <% } %>
+	<% if (GenDebugOutput) {%>qDebug() << this << ":comp: <%= ClassName %>" ; <% } %>
 	return 0;	//TODO: your implementation
 }
-		
-<% } %>
-		
+
+<% } %>		
 @@@@-@@@@@#ifndef <%= ClassName.ToUpper() %>_H
 #define <%= ClassName.ToUpper() %>_H
 
 #include <QSharedDataPointer>
-<% if (GenComparor) { %>#include <QSharedPointer><% } %>
-<% if (GenDebugOutput) { %>#include <QDebug><% } %>
+<% if (GenComparor) { %>
+#include <QSharedPointer>
+<% } %>
 
 <% if (AddComment) { %>
 // Forward declaration
@@ -147,8 +160,8 @@ public override void Render(TextWriter writer)
 	
 	if (OutputPath.Length>0) {
 		using(
-			StreamWriter cppFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + ".cpp" , false),
-				hFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + ".h" , false))
+			StreamWriter cppFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".cpp" , false),
+				hFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".h" , false))
 		{	
 			string[] parts = sw.ToString().Split(new string[] {"@@@@-@@@@@"}, StringSplitOptions.None);
 			cppFile.Write(parts[0]);
