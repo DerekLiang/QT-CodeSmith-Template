@@ -53,6 +53,8 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 		{ <% if (GenDebugOutput) {%> qDebug() << this << ":copy: <%= ClassName %><%= DataClassNameSuffix %>" ; <% } %>}
 		
 		<% if (AddComment) { %>
+		//assign operator= is defined in the base class and is private, therefore it is omit here.
+		
     	// int id;
     	// QString name;
 		<% } %>
@@ -156,20 +158,22 @@ class <%= ClassName %>
 <script runat="template">
 public override void Render(TextWriter writer)
 {
+	if (OutputPath.Length==0) {
+		base.Render(writer);
+		return;
+	}
 	StringWriter sw = new StringWriter();
 	
     this.Response.AddTextWriter(sw); 
     base.Render(writer);
 	
-	if (OutputPath.Length>0) {
-		using(
-			StreamWriter cppFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".cpp" , false),
-				hFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".h" , false))
-		{	
-			string[] parts = sw.ToString().Split(new string[] {"@@@@-@@@@@"}, StringSplitOptions.None);
-			cppFile.Write(parts[0]);
-			hFile.Write(parts[1]);
-		}
+	using(
+		StreamWriter cppFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".cpp" , false),
+			hFile = new StreamWriter(OutputPath + @"\" + ClassName.ToLower() + FileNameSuffix + ".h" , false))
+	{	
+		string[] parts = sw.ToString().Split(new string[] {"@@@@-@@@@@"}, StringSplitOptions.None);
+		cppFile.Write(parts[0]);
+		hFile.Write(parts[1]);
 	}
 }
 </script>
