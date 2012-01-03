@@ -4,6 +4,7 @@ Author: Derek Liang
 Description: This is a template class generator for quickly implement a skeloton class using Pimpl idiom in QT
 --%>
 <%@ CodeTemplate Language="C#" TargetLanguage="Text" Src="" Inherits="" Debug="False" Description="Template description here." %>
+<%@ Property Name="Namespace" Type="System.String" Default="MyNamespace" Optional="True" Category="Class info" Description="Specifiy the name space for QT class. Delimited by '.' " %>
 <%@ Property Name="ClassName" Type="System.String" Default="MyClass" Optional="False" Category="Class info" Description="Specifiy the QT class name" %>
 <%@ Property Name="DataClassNameSuffix" Type="System.String" Default="Data" Optional="False" Category="Class info" Description="Specify the QT Data class name suffix" %>
 <%@ Property Name="AddComment" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to comment the generated code" %>
@@ -23,6 +24,8 @@ Description: This is a template class generator for quickly implement a skeloton
 #include <QDebug>
 <% } %>
 #include "<%= ClassName.ToLower() %>.h"
+
+<%=NamespaceBegin() %>
 
 class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 {
@@ -93,6 +96,7 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 }
 
 <% } %>		
+<%=NamespaceEnd() %>
 @@@@-@@@@@#ifndef <%= ClassName.ToUpper() %>_H
 #define <%= ClassName.ToUpper() %>_H
 
@@ -100,6 +104,8 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 <% if (GenComparor) { %>
 #include <QSharedPointer>
 <% } %>
+
+<%=NamespaceBegin() %>
 
 <% if (AddComment) { %>
 // Forward declaration
@@ -153,12 +159,15 @@ class <%= ClassName %>
    	private:		
   		QSharedDataPointer<<%= ClassName %><%= DataClassNameSuffix %>> d;
 };
+
+<%=NamespaceEnd() %>
+
 #endif // <%= ClassName.ToUpper() %>_H
 
 <script runat="template">
 public override void Render(TextWriter writer)
 {
-	if (OutputPath.Length==0) {
+	if (String.IsNullOrEmpty(OutputPath)) {
 		base.Render(writer);
 		return;
 	}
@@ -176,4 +185,32 @@ public override void Render(TextWriter writer)
 		hFile.Write(parts[1]);
 	}
 }
+
+public string NamespaceBegin()
+{
+	string r=string.Empty;
+
+	if (!String.IsNullOrEmpty(Namespace)) {
+		foreach( string ns in Namespace.Split(new char[] {'.'})) {
+			r += "namespace " + ns + " { " ;
+		}
+	}
+	return r.TrimEnd();
+}
+
+public string NamespaceEnd() {
+	string r=string.Empty;
+	string r1=string.Empty;
+
+	if (!String.IsNullOrEmpty(Namespace)) {
+		foreach( string ns in Namespace.Split(new char[] {'.'})) {
+			r += "}" ;
+			r1 += ns + "::";
+		}
+		r1 = r1.Substring(0, r1.Length-2);
+	}
+	return r + " //" + r1;
+
+}
+
 </script>
