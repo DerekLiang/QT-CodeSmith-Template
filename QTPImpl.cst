@@ -4,12 +4,14 @@ Author: Derek Liang
 Description: This is a template class generator for quickly implement a skeloton class using Pimpl idiom in QT
 --%>
 <%@ CodeTemplate Language="C#" TargetLanguage="Text" Src="" Inherits="" Debug="False" Description="Template description here." %>
-<%@ Property Name="Namespace" Type="System.String" Default="MyNamespace" Optional="True" Category="Class info" Description="Specifiy the name space for QT class. Delimited by '.' " %>
+<%@ Property Name="Namespace" Type="System.String" Default="MyNamespace" Optional="True" Category="Class info" Description="Specifiy the name space for QT class. Delimited by '::' " %>
 <%@ Property Name="ClassName" Type="System.String" Default="MyClass" Optional="False" Category="Class info" Description="Specifiy the QT class name" %>
 <%@ Property Name="DataClassNameSuffix" Type="System.String" Default="Data" Optional="False" Category="Class info" Description="Specify the QT Data class name suffix" %>
 <%@ Property Name="AddComment" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to comment the generated code" %>
 <%@ Property Name="GenComparor" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to generate comparison operator" %>
+<%@ Property Name="GenSignalAndSlot" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to generate the signal and slot placeholder" %>
 <%@ Property Name="GenDebugOutput" Type="System.Boolean" Default="False" Optional="True" Category="Options" Description="Specify if you would like to generate debug output" %>
+<%@ Property Name="GenLog4Qt" Type="System.Boolean" Default="True" Optional="True" Category="Options" Description="Specify if you would like to generate code for Log4Qt" %>
 <%@ Property Name="OutputPath" Type="System.String" Default="" Optional="True" Category="Path" Description="Specifiy the QT project path" %>
 <%@ Property Name="FileNameSuffix" Type="System.String" Default="" Optional="True" Category="Path" Description="Specifiy the generated file suffix. You might want to generate the files in different file names and merge them manually." %>
 <%@ Property Name="FieldName" Type="System.String" Default="" Optional="True" Category="Field" Description="Specifiy the generated field name" %>
@@ -22,6 +24,9 @@ Description: This is a template class generator for quickly implement a skeloton
 <% if (GenDebugOutput) { %>
 #include <QString>
 #include <QDebug>
+<% } %>
+<% if (GenLog4Qt) { %>
+#include <Logger>
 <% } %>
 #include "<%= ClassName.ToLower() %>.h"
 
@@ -66,6 +71,10 @@ class <%= ClassName %><%= DataClassNameSuffix %> : public QSharedData
 		<% } %>
  };
 
+<% if (GenLog4Qt) { %>
+LOG4QT_DECLARE_STATIC_LOGGER(logger, <%= ClassName %>)
+<% } %>
+
 <%= ClassName %>::<%= ClassName %>() 
 	: d (new <%= ClassName %><%= DataClassNameSuffix %>) 
 { <% if (GenDebugOutput) {%> qDebug() << this << ":ctor: <%= ClassName %>" ; <% } %>}
@@ -95,7 +104,15 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 	return 0;	//TODO: your implementation
 }
 
-<% } %>		
+<% } %>
+<% if (GenSignalAndSlot) { %>
+
+void <%= ClassName %>::set_value() {
+	//your implementation
+	emit value_changed();	
+}
+<% } %>
+
 <%=NamespaceEnd() %>
 @@@@-@@@@@#ifndef <%= ClassName.ToUpper() %>_H
 #define <%= ClassName.ToUpper() %>_H
@@ -103,6 +120,9 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 #include <QSharedDataPointer>
 <% if (GenComparor) { %>
 #include <QSharedPointer>
+<% } %>
+<% if (GenSignalAndSlot) { %>
+#include <QObject>
 <% } %>
 
 <%=NamespaceBegin() %>
@@ -112,8 +132,17 @@ bool <%= ClassName %>::operator==(const <%= ClassName %>& other) const {
 <% } %>
 class <%= ClassName %><%= DataClassNameSuffix %>;
 
-class <%= ClassName %>
+class <%= ClassName %><% if (GenSignalAndSlot) { %> : public QObject<% } %>
 {
+<% if (GenSignalAndSlot) { %>
+	Q_OBJECT
+	
+	public slots:
+		void set_value() ;
+	signals:
+		void value_changed() ;
+		
+<% } %>
 	public:
     	<%= ClassName %>() ;
     	
@@ -191,6 +220,7 @@ public string NamespaceBegin()
 	string r=string.Empty;
 
 	if (!String.IsNullOrEmpty(Namespace)) {
+		Namespace = Namespace.Replace("::", ".");
 		foreach( string ns in Namespace.Split(new char[] {'.'})) {
 			r += "namespace " + ns + " { " ;
 		}
@@ -203,6 +233,7 @@ public string NamespaceEnd() {
 	string r1=string.Empty;
 
 	if (!String.IsNullOrEmpty(Namespace)) {
+		Namespace = Namespace.Replace("::", ".");
 		foreach( string ns in Namespace.Split(new char[] {'.'})) {
 			r += "}" ;
 			r1 += ns + "::";
